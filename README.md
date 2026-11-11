@@ -38,7 +38,8 @@ npm run dev            # http://localhost:5173
 npm run build          # type-check + production build into dist/
 ```
 
-Deployed on Vercel as project `m1-command`. Environment variables (build-time):
+Deployed on Vercel as project `m1-command` → **https://m1-command.vercel.app** (builds
+from this branch via the Git integration). Environment variables (build-time):
 
 | Variable                  | Value                                    |
 | ------------------------- | ---------------------------------------- |
