@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { HubData, RoadmapItem, RoadmapStatus, SyncStatus } from '../types';
+import type {
+  HubData,
+  RoadmapItem,
+  RoadmapItemInput,
+  RoadmapOrg,
+  RoadmapStatus,
+  RoutineTask,
+  RoutineTaskInput,
+  SyncStatus
+} from '../types';
 import { seedData } from './seed';
 import * as db from './db';
 
@@ -19,6 +28,24 @@ export interface NewProjectInput {
   type: string;
   revisions: string;
   status: string;
+}
+
+interface Positioned {
+  position: number;
+}
+
+/** Move an item one slot up (-1) or down (+1), re-indexing positions 0..n-1. */
+function moveInList<T extends Positioned & { id: string }>(items: T[], id: string, dir: -1 | 1): T[] {
+  const sorted = [...items].sort((a, b) => a.position - b.position);
+  const idx = sorted.findIndex((i) => i.id === id);
+  const swap = idx + dir;
+  if (idx < 0 || swap < 0 || swap >= sorted.length) return sorted;
+  [sorted[idx], sorted[swap]] = [sorted[swap], sorted[idx]];
+  return sorted.map((item, position) => ({ ...item, position }));
+}
+
+function nextPosition<T extends Positioned>(items: T[]): number {
+  return items.reduce((max, item) => Math.max(max, item.position), -1) + 1;
 }
 
 export function useHub() {
@@ -49,10 +76,16 @@ export function useHub() {
 
   useEffect(() => {
     void refresh();
+    // Debounce refetches so multi-row writes don't trigger a refetch storm.
+    let timer: number | undefined;
     const unsub = db.subscribeToChanges(() => {
-      void refresh();
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void refresh(), 350);
     });
-    return unsub;
+    return () => {
+      window.clearTimeout(timer);
+      unsub();
+    };
   }, [refresh]);
 
   const runMutation = useCallback(
@@ -67,6 +100,7 @@ export function useHub() {
     [refresh]
   );
 
+  // --- Routine drills ---
   const toggleRoutineTask = useCallback(
     (id: string) => {
       runMutation(
@@ -74,12 +108,71 @@ export function useHub() {
           ...prev,
           routine: prev.routine.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
         }),
-        (next) => db.persistRoutineTask(next, id)
+        (next) => db.persistRoutine(next)
       );
     },
     [runMutation]
   );
 
+  const addRoutineTask = useCallback(
+    (input: RoutineTaskInput) => {
+      runMutation(
+        (prev) => {
+          const task: RoutineTask = {
+            id: `task-${Date.now()}`,
+            completed: false,
+            position: nextPosition(prev.routine),
+            ...input
+          };
+          return { ...prev, routine: [...prev.routine, task] };
+        },
+        (next) => db.persistRoutine(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const updateRoutineTask = useCallback(
+    (id: string, input: RoutineTaskInput) => {
+      runMutation(
+        (prev) => ({
+          ...prev,
+          routine: prev.routine.map((t) => (t.id === id ? { ...t, ...input } : t))
+        }),
+        (next) => db.persistRoutine(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const deleteRoutineTask = useCallback(
+    (id: string) => {
+      runMutation(
+        (prev) => ({ ...prev, routine: prev.routine.filter((t) => t.id !== id) }),
+        (next) => db.deleteRoutineItem(next, id)
+      );
+    },
+    [runMutation]
+  );
+
+  const moveRoutineTask = useCallback(
+    (id: string, dir: -1 | 1) => {
+      runMutation(
+        (prev) => ({ ...prev, routine: moveInList(prev.routine, id, dir) }),
+        (next) => db.persistRoutine(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const resetRoutine = useCallback(() => {
+    runMutation(
+      (prev) => ({ ...prev, routine: prev.routine.map((t) => ({ ...t, completed: false })) }),
+      (next) => db.persistRoutine(next)
+    );
+  }, [runMutation]);
+
+  // --- QC checklist ---
   const toggleQcItem = useCallback(
     (id: string) => {
       runMutation(
@@ -100,6 +193,7 @@ export function useHub() {
     );
   }, [runMutation]);
 
+  // --- Projects ---
   const addProject = useCallback(
     (input: NewProjectInput) => {
       const project = {
@@ -125,6 +219,7 @@ export function useHub() {
     [runMutation]
   );
 
+  // --- Roadmap tracker ---
   const cycleRoadmapItem = useCallback(
     (id: string) => {
       runMutation(
@@ -134,7 +229,68 @@ export function useHub() {
             r.id === id ? { ...r, status: nextRoadmapStatus(r.status) } : r
           )
         }),
-        (next) => db.persistRoadmapItem(next, id)
+        (next) => db.persistRoadmap(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const addRoadmapItem = useCallback(
+    (org: RoadmapOrg, input: RoadmapItemInput) => {
+      runMutation(
+        (prev) => {
+          const item: RoadmapItem = {
+            id: `road-${Date.now()}`,
+            org,
+            position: nextPosition(prev.roadmap.filter((r) => r.org === org)),
+            ...input
+          };
+          return { ...prev, roadmap: [...prev.roadmap, item] };
+        },
+        (next) => db.persistRoadmap(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const updateRoadmapItem = useCallback(
+    (id: string, input: RoadmapItemInput) => {
+      runMutation(
+        (prev) => ({
+          ...prev,
+          roadmap: prev.roadmap.map((r) => (r.id === id ? { ...r, ...input } : r))
+        }),
+        (next) => db.persistRoadmap(next)
+      );
+    },
+    [runMutation]
+  );
+
+  const deleteRoadmapItem = useCallback(
+    (id: string) => {
+      runMutation(
+        (prev) => ({ ...prev, roadmap: prev.roadmap.filter((r) => r.id !== id) }),
+        (next) => db.deleteRoadmapItem(next, id)
+      );
+    },
+    [runMutation]
+  );
+
+  const moveRoadmapItem = useCallback(
+    (id: string, dir: -1 | 1) => {
+      runMutation(
+        (prev) => {
+          const item = prev.roadmap.find((r) => r.id === id);
+          if (!item) return prev;
+          const moved = moveInList(
+            prev.roadmap.filter((r) => r.org === item.org),
+            id,
+            dir
+          );
+          const byId = new Map(moved.map((r) => [r.id, r]));
+          return { ...prev, roadmap: prev.roadmap.map((r) => byId.get(r.id) ?? r) };
+        },
+        (next) => db.persistRoadmap(next)
       );
     },
     [runMutation]
@@ -144,14 +300,19 @@ export function useHub() {
     data,
     status,
     toggleRoutineTask,
+    addRoutineTask,
+    updateRoutineTask,
+    deleteRoutineTask,
+    moveRoutineTask,
+    resetRoutine,
     toggleQcItem,
     resetQcChecklist,
     addProject,
     deleteProject,
-    cycleRoadmapItem
+    cycleRoadmapItem,
+    addRoadmapItem,
+    updateRoadmapItem,
+    deleteRoadmapItem,
+    moveRoadmapItem
   };
-}
-
-export function roadmapByOrg(roadmap: RoadmapItem[], org: RoadmapItem['org']): RoadmapItem[] {
-  return roadmap.filter((r) => r.org === org);
 }

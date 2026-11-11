@@ -138,7 +138,8 @@ export const seedData: HubData = {
       title: 'Standardize Client Terms & Revision Limits',
       description: 'Cap revisions to 2 rounds per mix to protect studio engineering hours.',
       status: 'Done',
-      position: 0
+      position: 0,
+      due_date: '2026-10-15'
     },
     {
       id: 'r7h-2',
@@ -146,7 +147,8 @@ export const seedData: HubData = {
       title: 'Create Logic Pro Mix & Master Template Suite',
       description: 'Pre-routed summing stacks and aux returns saved to template directory.',
       status: 'In Progress',
-      position: 1
+      position: 1,
+      due_date: '2026-12-05'
     },
     {
       id: 'r7h-3',
@@ -154,7 +156,8 @@ export const seedData: HubData = {
       title: 'Launch 7H Engineering Service Portal',
       description: 'Dedicated client intake for commercial mixing, mastering, and stem delivery.',
       status: 'Pending',
-      position: 2
+      position: 2,
+      due_date: '2027-01-20'
     },
     {
       id: 'est-1',
@@ -162,7 +165,8 @@ export const seedData: HubData = {
       title: 'Reaper Custom Action Scripting Setup',
       description: 'Build modular hotkey workflows for fast sound design asset exports.',
       status: 'Done',
-      position: 0
+      position: 0,
+      due_date: '2026-10-31'
     },
     {
       id: 'est-2',
@@ -170,7 +174,8 @@ export const seedData: HubData = {
       title: 'DSP & Audio Plugin Architecture R&D',
       description: 'Explore JUCE and HISE audio plugin frameworks for custom VST development.',
       status: 'In Progress',
-      position: 1
+      position: 1,
+      due_date: '2026-12-15'
     },
     {
       id: 'est-3',
@@ -178,7 +183,8 @@ export const seedData: HubData = {
       title: 'Proprietary Sample & Preset Sound Bank',
       description: 'Create original sci-fi & hybrid instrument sound libraries engineered in Reaper.',
       status: 'Pending',
-      position: 2
+      position: 2,
+      due_date: '2027-02-10'
     }
   ]
 };

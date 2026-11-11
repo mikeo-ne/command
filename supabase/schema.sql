@@ -37,8 +37,12 @@ create table if not exists public.m1_roadmap_items (
   title text not null,
   description text not null default '',
   status text not null default 'Pending' check (status in ('Pending', 'In Progress', 'Done')),
-  position integer not null default 0
+  position integer not null default 0,
+  due_date date
 );
+
+-- upgrade path for hubs created before due dates existed
+alter table public.m1_roadmap_items add column if not exists due_date date;
 
 -- Row Level Security: shared hub, intentionally open to the anon role.
 alter table public.m1_routine_tasks enable row level security;
@@ -106,14 +110,14 @@ insert into public.m1_projects (id, title, client, type, revisions, status) valu
   ('proj-2', 'Cyberpunk Sound Effects Kit', 'East Sound Technologies', 'Sound Design (Reaper)', 'Internal R&D Asset', 'Reaper SD Processing')
 on conflict (id) do nothing;
 
-insert into public.m1_roadmap_items (id, org, title, description, status, position) values
-  ('r7h-1', '7H', 'Standardize Client Terms & Revision Limits', 'Cap revisions to 2 rounds per mix to protect studio engineering hours.', 'Done', 0),
-  ('r7h-2', '7H', 'Create Logic Pro Mix & Master Template Suite', 'Pre-routed summing stacks and aux returns saved to template directory.', 'In Progress', 1),
-  ('r7h-3', '7H', 'Launch 7H Engineering Service Portal', 'Dedicated client intake for commercial mixing, mastering, and stem delivery.', 'Pending', 2),
-  ('est-1', 'EST', 'Reaper Custom Action Scripting Setup', 'Build modular hotkey workflows for fast sound design asset exports.', 'Done', 0),
-  ('est-2', 'EST', 'DSP & Audio Plugin Architecture R&D', 'Explore JUCE and HISE audio plugin frameworks for custom VST development.', 'In Progress', 1),
-  ('est-3', 'EST', 'Proprietary Sample & Preset Sound Bank', 'Create original sci-fi & hybrid instrument sound libraries engineered in Reaper.', 'Pending', 2)
-on conflict (id) do nothing;
+insert into public.m1_roadmap_items (id, org, title, description, status, position, due_date) values
+  ('r7h-1', '7H', 'Standardize Client Terms & Revision Limits', 'Cap revisions to 2 rounds per mix to protect studio engineering hours.', 'Done', 0, '2026-10-15'),
+  ('r7h-2', '7H', 'Create Logic Pro Mix & Master Template Suite', 'Pre-routed summing stacks and aux returns saved to template directory.', 'In Progress', 1, '2026-12-05'),
+  ('r7h-3', '7H', 'Launch 7H Engineering Service Portal', 'Dedicated client intake for commercial mixing, mastering, and stem delivery.', 'Pending', 2, '2027-01-20'),
+  ('est-1', 'EST', 'Reaper Custom Action Scripting Setup', 'Build modular hotkey workflows for fast sound design asset exports.', 'Done', 0, '2026-10-31'),
+  ('est-2', 'EST', 'DSP & Audio Plugin Architecture R&D', 'Explore JUCE and HISE audio plugin frameworks for custom VST development.', 'In Progress', 1, '2026-12-15'),
+  ('est-3', 'EST', 'Proprietary Sample & Preset Sound Bank', 'Create original sci-fi & hybrid instrument sound libraries engineered in Reaper.', 'Pending', 2, '2027-02-10')
+on conflict (id) do update set due_date = excluded.due_date where public.m1_roadmap_items.due_date is null;
 
 -- Realtime: broadcast hub changes to every connected client (live shared hub)
 do $$

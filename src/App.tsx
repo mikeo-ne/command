@@ -50,12 +50,31 @@ export default function App() {
         <Sidebar active={tab} onTab={selectTab} badges={badges} />
 
         <main className="flex-1 min-w-0">
-          {tab === 'routine' && <RoutineTab tasks={hub.data.routine} onToggle={hub.toggleRoutineTask} />}
+          {tab === 'routine' && (
+            <RoutineTab
+              tasks={hub.data.routine}
+              onToggle={hub.toggleRoutineTask}
+              onAdd={hub.addRoutineTask}
+              onUpdate={hub.updateRoutineTask}
+              onDelete={hub.deleteRoutineTask}
+              onMove={hub.moveRoutineTask}
+              onReset={hub.resetRoutine}
+            />
+          )}
           {tab === 'projects' && (
             <ProjectsTab projects={hub.data.projects} onAdd={hub.addProject} onDelete={hub.deleteProject} />
           )}
           {tab === 'qc' && <QcTab items={hub.data.qc} onToggle={hub.toggleQcItem} onReset={hub.resetQcChecklist} />}
-          {tab === 'roadmap' && <RoadmapTab roadmap={hub.data.roadmap} onCycle={hub.cycleRoadmapItem} />}
+          {tab === 'roadmap' && (
+            <RoadmapTab
+              roadmap={hub.data.roadmap}
+              onCycle={hub.cycleRoadmapItem}
+              onAdd={hub.addRoadmapItem}
+              onUpdate={hub.updateRoadmapItem}
+              onDelete={hub.deleteRoadmapItem}
+              onMove={hub.moveRoadmapItem}
+            />
+          )}
         </main>
       </div>
     </div>

@@ -62,11 +62,15 @@ export function loadLocalData(): HubData {
   return loadLocal();
 }
 
-export async function persistRoutineTask(next: HubData, id: string): Promise<void> {
+export async function persistRoutine(next: HubData): Promise<void> {
   if (!supabase) return saveLocal(next);
-  const task = next.routine.find((t) => t.id === id);
-  if (!task) return;
-  const { error } = await supabase.from('m1_routine_tasks').upsert(task);
+  const { error } = await supabase.from('m1_routine_tasks').upsert(next.routine);
+  if (error) throw error;
+}
+
+export async function deleteRoutineItem(next: HubData, id: string): Promise<void> {
+  if (!supabase) return saveLocal(next);
+  const { error } = await supabase.from('m1_routine_tasks').delete().eq('id', id);
   if (error) throw error;
 }
 
@@ -76,11 +80,15 @@ export async function persistQcItems(next: HubData): Promise<void> {
   if (error) throw error;
 }
 
-export async function persistRoadmapItem(next: HubData, id: string): Promise<void> {
+export async function persistRoadmap(next: HubData): Promise<void> {
   if (!supabase) return saveLocal(next);
-  const item = next.roadmap.find((r) => r.id === id);
-  if (!item) return;
-  const { error } = await supabase.from('m1_roadmap_items').upsert(item);
+  const { error } = await supabase.from('m1_roadmap_items').upsert(next.roadmap);
+  if (error) throw error;
+}
+
+export async function deleteRoadmapItem(next: HubData, id: string): Promise<void> {
+  if (!supabase) return saveLocal(next);
+  const { error } = await supabase.from('m1_roadmap_items').delete().eq('id', id);
   if (error) throw error;
 }
 

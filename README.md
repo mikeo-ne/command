@@ -9,11 +9,13 @@ Vite + React + TypeScript + Tailwind app with a shared Supabase workspace and li
 
 ## Modules
 
-1. **Daily Practice** — four 15-minute drills with completion tracking
+1. **Daily Practice** — editable drill list: add / edit / delete / reorder drills, completion
+   tracking, one-click daily reset
 2. **Studio Pipeline** — client sessions (add / delete), discipline metrics
 3. **Pre-Flight QC Audit** — 8-point Logic Pro mix/master checklist with session reset
-4. **Label & Tech R&D** — roadmap columns for 7H Music Group and East Sound Technologies
-   (click a card to cycle Pending → In Progress → Done)
+4. **Label & Tech R&D** — full roadmap tracker for 7H Music Group and East Sound Technologies:
+   add / edit / delete / reorder items, status cycling (Pending → In Progress → Done),
+   target dates with overdue flags, and per-column progress bars
 
 ## Stack
 

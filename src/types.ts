@@ -10,6 +10,13 @@ export interface RoutineTask {
   position: number;
 }
 
+export interface RoutineTaskInput {
+  title: string;
+  duration: string;
+  tool: string;
+  description: string;
+}
+
 export interface QcItem {
   id: string;
   title: string;
@@ -39,6 +46,14 @@ export interface RoadmapItem {
   description: string;
   status: RoadmapStatus;
   position: number;
+  due_date: string | null;
+}
+
+export interface RoadmapItemInput {
+  title: string;
+  description: string;
+  status: RoadmapStatus;
+  due_date: string | null;
 }
 
 export interface HubData {
